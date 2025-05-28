@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SlouchCam.com</title>
+        <link rel="preload" href="styles.css" as="style" />
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.0.0"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.0.0"></script>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <div class="background-indicator" id="tabStatus">Tab Active</div>
+
+        <h1>SlouchCam.com 🦥</h1>
+
+        <div class="status" id="status">Loading model...</div>
+
+        <div class="controls">
+            <button id="startBtn" disabled>Start Detection</button>
+            <button id="stopBtn" disabled>Stop Detection</button>
+            <button id="screenshotBtn" disabled>Take Screenshot</button>
+        </div>
+
+        <div class="container">
+            <div class="video-container">
+                <h3>SlouchCam</h3>
+                <video
+                    id="inputVideo"
+                    width="640"
+                    height="480"
+                    autoplay
+                    muted
+                    playsinline
+                ></video>
+                <canvas id="outputCanvas" width="640" height="480"></canvas>
+            </div>
+            <div class="info">
+                <h3>Pose Data</h3>
+                <pre id="poseData">No pose detected yet...</pre>
+                <div>
+                    <small>FPS: <span id="fpsDisplay">0</span></small>
+                </div>
+            </div>
+            <div class="info">
+                <h3>About</h3>
+            </div>
+        </div>
+
+        <script src="index.js"></script>
+    </body>
+</html>
