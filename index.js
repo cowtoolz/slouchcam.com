@@ -7,6 +7,7 @@ let useWorker = true;
 let lastTime = 0;
 let frameCount = 0;
 let fps = 0;
+let slouch_factor = 0;
 
 let max_neck_length = 0;
 let current_neck_length = 0;
@@ -226,13 +227,28 @@ function drawKeypoints(poses) {
   max_neck_length = Math.max(current_neck_length, max_neck_length);
 
   if (current_neck_length < max_neck_length - max_neck_length * 0.15) {
+    slouch_factor += 1;
     ctx.strokeStyle = "#FF0000";
+  } else {
+    if (slouch_factor > 0) {
+      slouch_factor -= 1;
+    }
   }
 
+  // draw neck
   ctx.beginPath();
   ctx.moveTo(shoulder_mid_x, shoulder_mid_y);
   ctx.lineTo(head_mid_x, head_mid_y);
   ctx.stroke();
+
+  // if slouching for last 30 seconds, send notification
+  if (slouch_factor > 30 * fps) {
+    new Notification("SlouchCam.com", {
+      body: "SLOUCHING DETECTED!",
+      icon: "favicon.svg",
+    });
+    slouch_factor = 0;
+  }
 }
 
 function formatPoseData(poses) {
@@ -268,7 +284,8 @@ function formatPoseData(poses) {
 
   result += `\nMax neck length: ${max_neck_length}\n`;
   result += `Current neck length: ${current_neck_length}\n`;
-  result += `current_head_width: ${current_head_width}\n`;
+  result += `Current head width: ${current_head_width}\n`;
+  result += `\nCurrent slouch factor: ${slouch_factor}\n`;
   return result;
 }
 
@@ -321,9 +338,7 @@ async function initialize() {
     updateStatus("Camera ready. Loading AI model...", "loading");
     await loadModel();
 
-    Notification.requestPermission().then((result) => {
-      console.log(result);
-    });
+    Notification.requestPermission();
   } catch (error) {
     updateStatus(`Initialization failed: ${error.message}`, "error");
     console.error("Initialization error:", error);
