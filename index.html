@@ -11,15 +11,63 @@
     </head>
     <body>
         <div class="background-indicator" id="tabStatus">Tab Active</div>
-
         <h1>SlouchCam.com 🦥</h1>
-
         <div class="status" id="status">Loading model...</div>
 
         <div class="controls">
             <button id="startBtn" disabled>Start Detection</button>
             <button id="stopBtn" disabled>Stop Detection</button>
             <button id="screenshotBtn" disabled>Take Screenshot</button>
+
+            <div id="notify-settings">
+                <div class="setting-group">
+                    <label>Notifications:</label>
+                    <input
+                        type="radio"
+                        id="notificationOn"
+                        name="notifications"
+                        value="on"
+                        checked
+                    />
+                    <label for="notificationOn">On</label>
+                    <input
+                        type="radio"
+                        id="notificationOff"
+                        name="notifications"
+                        value="off"
+                    />
+                    <label for="notificationOff">Off</label>
+                </div>
+
+                <label>Beep Sound:</label>
+                <input type="radio" id="beepOn" name="beep" value="on" />
+                <label for="beepOn">On</label>
+                <input
+                    type="radio"
+                    id="beepOff"
+                    name="beep"
+                    value="off"
+                    checked
+                />
+                <label for="beepOff">Off</label>
+
+                <div class="setting-group">
+                    <label for="thresholdSlider">Threshold:</label>
+                    <input
+                        type="range"
+                        id="thresholdSlider"
+                        class="slider"
+                        min="5"
+                        max="120"
+                        value="30"
+                        step="5"
+                    />
+                    <span>
+                        <span id="thresholdValue">30</span>
+                        seconds
+                    </span>
+                </div>
+            </div>
         </div>
 
         <div class="container">
@@ -41,9 +89,6 @@
                 <div>
                     <small>FPS: <span id="fpsDisplay">0</span></small>
                 </div>
-            </div>
-            <div class="info">
-                <h3>About</h3>
             </div>
         </div>
 

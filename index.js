@@ -14,6 +14,11 @@ let current_neck_length = 0;
 let current_shoulder_width = 0;
 let current_head_width = 0;
 
+let notificationsEnabled = true;
+let beepEnabled = false;
+let thresholdSeconds = 30;
+let audioContext = null;
+
 const video = document.getElementById("inputVideo");
 const canvas = document.getElementById("outputCanvas");
 const ctx = canvas.getContext("2d");
@@ -25,7 +30,68 @@ const statusElement = document.getElementById("status");
 const tabStatus = document.getElementById("tabStatus");
 const fpsDisplay = document.getElementById("fpsDisplay");
 
-// debug tab visibility
+const notificationRadios = document.querySelectorAll(
+  'input[name="notifications"]',
+);
+const beepRadios = document.querySelectorAll('input[name="beep"]');
+const thresholdSlider = document.getElementById("thresholdSlider");
+const thresholdValue = document.getElementById("thresholdValue");
+
+function initAudio() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playBeep() {
+  if (!beepEnabled || !audioContext) return;
+
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
+  oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+  oscillator.type = "sine";
+
+  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(
+    0.01,
+    audioContext.currentTime + 0.5,
+  );
+
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.5);
+}
+
+notificationRadios.forEach((radio) => {
+  radio.addEventListener("change", (e) => {
+    notificationsEnabled = e.target.value === "on";
+    if (notificationsEnabled && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  });
+});
+
+beepRadios.forEach((radio) => {
+  radio.addEventListener("change", (e) => {
+    beepEnabled = e.target.value === "on";
+    if (beepEnabled) {
+      initAudio();
+    }
+  });
+});
+
+thresholdSlider.addEventListener("input", (e) => {
+  thresholdSeconds = parseInt(e.target.value);
+  thresholdValue.textContent = thresholdSeconds;
+});
+
+if (Notification.permission === "default") {
+  Notification.requestPermission();
+}
+
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     tabStatus.textContent = "Tab in Background - Worker Active";
@@ -241,12 +307,19 @@ function drawKeypoints(poses) {
   ctx.lineTo(head_mid_x, head_mid_y);
   ctx.stroke();
 
-  // if slouching for last 30 seconds, send notification
-  if (slouch_factor > 30 * fps) {
-    new Notification("SlouchCam.com", {
-      body: "SLOUCHING DETECTED!",
-      icon: "favicon.svg",
-    });
+  // if slouching for the configured threshold time, send notification/beep
+  if (slouch_factor > thresholdSeconds * fps) {
+    if (notificationsEnabled && Notification.permission === "granted") {
+      new Notification("SlouchCam.com", {
+        body: "SLOUCHING DETECTED!",
+        icon: "favicon.svg",
+      });
+    }
+
+    if (beepEnabled) {
+      playBeep();
+    }
+
     slouch_factor = 0;
   }
 }
@@ -282,10 +355,11 @@ function formatPoseData(poses) {
     }
   }
 
-  result += `\nMax neck length: ${max_neck_length}\n`;
-  result += `Current neck length: ${current_neck_length}\n`;
-  result += `Current head width: ${current_head_width}\n`;
+  result += `\nMax neck length: ${max_neck_length.toFixed(2)}\n`;
+  result += `Current neck length: ${current_neck_length.toFixed(2)}\n`;
+  result += `Current head width: ${current_head_width.toFixed(2)}\n`;
   result += `\nCurrent slouch factor: ${slouch_factor}\n`;
+  result += `Threshold: ${thresholdSeconds} seconds (${(thresholdSeconds * fps).toFixed(0)} frames)\n`;
   return result;
 }
 
@@ -337,8 +411,6 @@ async function initialize() {
     await setupCamera();
     updateStatus("Camera ready. Loading AI model...", "loading");
     await loadModel();
-
-    Notification.requestPermission();
   } catch (error) {
     updateStatus(`Initialization failed: ${error.message}`, "error");
     console.error("Initialization error:", error);
