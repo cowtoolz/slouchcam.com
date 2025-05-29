@@ -122,3 +122,23 @@ pre {
     justify-content: center;
     height: min-content;
 }
+#poseData {
+    height: 100%;
+}
+footer {
+    position: absolute;
+    bottom: 2em;
+    right: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    > a {
+        text-decoration: none;
+        color: black;
+        font-style: unset;
+        :hover {
+            font-style: oblique;
+        }
+    }
+}
